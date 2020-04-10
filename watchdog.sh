@@ -1,6 +1,7 @@
 
 log_dir=/tmp/
-LOG="${log_dir}daemon.log"
+daemon_log="${log_dir}daemon.log"
+watchdog_log="${log_dir}scheduler.log"
 check_process_interval=10
 rotate_log_interval=300
 daemon_name=mock_daemon.sh
@@ -16,8 +17,8 @@ get_proc(){
   daemonPID=$(pgrep -f $daemon_name)
 }
 
-touch $LOG
-echo "Watchdog started" >> $LOG
+touch $watchdog_log
+echo "Watchdog started" >> $watchdog_log
 
 start_time="$(date -u +%s)"
 
@@ -42,11 +43,11 @@ do
     then
       fatal= "FATAL: Daemon: $daemon_name could not be launched"  
       echo $fatal
-      echo $fatal >> LOG
+      echo $fatal >> watchdog_log
       exit 1
     else
        now=$(date +"%Y-%m-%d %T")
-       echo "Daemon restarted at:$now" >> $LOG
+       echo "Daemon restarted at:$now" >> $watchdog_log
     fi
   fi       
   
@@ -57,14 +58,14 @@ do
   then
     start_time="$(date -u +%s)"
     
-    log_size=$(ls -nl $LOG  | awk '{print $5}') 
+    log_size=$(ls -nl $daemon_log  | awk '{print $5}') 
     
     if [ $log_size -ge $max_log_size ]
     then
       rm_files="$log_dir$old_logs"
       rm $rm_files
-      mv "${LOG}"  "${LOG}.$(date +"%Y-%m-%d_%T")"
-      touch $LOG
+      mv "${daemon_log}"  "${daemon_log}.$(date +"%Y-%m-%d_%T")"
+      touch $daemon_log
     fi 
   fi
  
